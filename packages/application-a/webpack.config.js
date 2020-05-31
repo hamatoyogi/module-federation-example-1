@@ -5,7 +5,12 @@ const mode = process.env.NODE_ENV || 'production';
 
 module.exports = {
   mode,
-  entry: './src/index',
+	entry: './src/index',
+	// This is where we actually output our federated module to be consumed by
+	// application_b
+  output: {
+    publicPath: 'http://localhost:3001/', // New
+  },
   devtool: 'source-map',
   optimization: {
     minimize: mode === 'production',
@@ -26,6 +31,19 @@ module.exports = {
   },
 
   plugins: [
+    // New
+    new ModuleFederationPlugin({
+      name: 'application_a',
+      library: { type: 'var', name: 'application_a' },
+      filename: 'remoteEntry.js',
+      exposes: {
+        'SayHelloFromA': './src/app',
+      },
+      remotes: {
+        'application_b': 'application_b',
+      },
+      shared: ['react', 'react-dom'],
+    }),
     new HtmlWebpackPlugin({
       template: './public/index.html',
     }),
